@@ -47,15 +47,13 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         icmpType, icmpCode, myChecksum, packetID, mySequence = struct.unpack('bbHHh', icmpHeader)
 
         if icmpType != 0:
-            match icmpCode:
-                case 0:
+            if (icmpCode == 0):
                     return "Destination Network Unreachable"
-                case 1:
+            if (icmpCode == 1):
                     return "Destination Host Unreachable"
-                case 2:
+            if (icmpCode == 2):
                     return "Destination Protocol Unreachable"
-                case _:
-                    return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType,
+            return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType,
                                                                                                              icmpCode)
         if packetID != ID:
             return 'Expected Packet ID = {}, but obtained {}'.format(ID, packetID)
@@ -151,8 +149,8 @@ def ping(host, timeout=1):
             if rtt_count != 0:
                 print('round-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms'.format(rtt_min, rtt_sum / rtt_count, rtt_max))
 
-
-ping("umass.edu")
+ping("127.0.0.1")
+# ping("umass.edu")
 # ping("alibaba.com")
 # #ping("bbc.com")
 # #ping("unimelb.edu.au")
