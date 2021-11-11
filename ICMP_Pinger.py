@@ -1,3 +1,4 @@
+import socket
 from socket import *
 import os
 import sys
@@ -29,19 +30,59 @@ def checksum(string):
 
 
 def receiveOnePing(mySocket, ID, timeout, destAddr):
+    global rtt_count, rtt_sum, rtt_min, rtt_max
     timeLeft = timeout
     while 1:
         startedSelect = time.time()
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
-    if whatReady[0] == []:  # Timeout
-        return "Request timed out."
-    timeReceived = time.time()
-    recPacket, addr = mySocket.recvfrom(1024)
-    # Fill in start
-    # Fetch the ICMP header from the IP packet
-    # Explain each line
-    # Fill in end
+        if whatReady[0] == []:  # Timeout
+            return "Request timed out."
+        timeReceived = time.time()
+        recPacket, addr = mySocket.recvfrom(1024)
+
+        # Fill in start
+        # Fetch the ICMP header from the IP packet
+        icmpHeader = recPacket[20:28]
+        icmpType, icmpCode, myChecksum, packetID, mySequence = struct.unpack('bbHHh', icmpHeader)
+
+        if icmpType != 0:
+            match icmpCode:
+                case 0:
+                    return "Destination Network Unreachable"
+                case 1:
+                    return "Destination Host Unreachable"
+                case 2:
+                    return "Destination Protocol Unreachable"
+                case _:
+                    return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType, icmpCode)
+        if packetID != ID:
+            return 'Expected Packet ID = {}, but obtained {}'.format(ID, packetID)
+
+        bytesAsDouble = struct.calcsize("d")
+        timeSent = struct.unpack("d", recPacket[28:28+bytesAsDouble])[0]
+
+        rtt = (timeReceived - timeSent)*1000
+        rtt_count += 1
+        rtt_sum += rtt
+        rtt_min = min(rtt, rtt_min)
+        rtt_max = max(rtt, rtt_max)
+
+        ipHeader = struct.unpack('!BBHHHBBH4s4s' , recPacket[:20])
+        ttl = ipHeader[5]
+        sendAddress = socket.inet_ntoa(ipHeader[8])
+        packetLength  = len(recPacket) - 20
+
+        # Explain each line
+
+        # Fill in end
+        timeLeft = timeLeft - howLongInSelect
+        if timeLeft <= 0:
+            return "Request timed out."
+
+        return 'Received {} bytes from {}: icmp_seq={} ttl={} time={:.3f} ms'.format(packetLength, sendAddress, mySequence, ttl, rtt)
+
+
 
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
@@ -91,8 +132,9 @@ def ping(host, timeout=1):
         delay = doOnePing(dest, timeout)
         print(delay)
         time.sleep(1) # one second return delay
-    ping("umass.edu")
-    #ping("alibaba.com")
-    # #ping("bbc.com")
-    # #ping("unimelb.edu.au")
-    # #ping("pretoriazoo.org")
+
+ping("umass.edu")
+#ping("alibaba.com")
+# #ping("bbc.com")
+# #ping("unimelb.edu.au")
+# #ping("pretoriazoo.org")
