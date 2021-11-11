@@ -34,15 +34,14 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         startedSelect = time.time()
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
-        if whatReady[0] == []:  # Timeout
-            return "Request timed out."
-        timeReceived = time.time()
-        recPacket, addr = mySocket.recvfrom(1024)
-
-
-# Fill in start
-# Fetch the ICMP header from the IP packet
-# Explain each lin#Fill in end
+    if whatReady[0] == []:  # Timeout
+        return "Request timed out."
+    timeReceived = time.time()
+    recPacket, addr = mySocket.recvfrom(1024)
+    # Fill in start
+    # Fetch the ICMP header from the IP packet
+    # Explain each line
+    # Fill in end
 
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
@@ -66,10 +65,8 @@ def sendOnePing(mySocket, destAddr, ID):
     packet = header + data
 
     mySocket.sendto(packet, (destAddr, 1))  # AF_INET address must be tuple, not str
-
-
-# Both LISTS and TUPLES consist of a number of objects
-# which can be referenced by their position number within the object.
+    # Both LISTS and TUPLES consist of a number of objects
+    # which can be referenced by their position number within the object.
 
 def doOnePing(destAddr, timeout):
     icmp = getprotobyname("icmp")
