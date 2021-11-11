@@ -55,23 +55,24 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
                 case 2:
                     return "Destination Protocol Unreachable"
                 case _:
-                    return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType, icmpCode)
+                    return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType,
+                                                                                                             icmpCode)
         if packetID != ID:
             return 'Expected Packet ID = {}, but obtained {}'.format(ID, packetID)
 
         bytesAsDouble = struct.calcsize("d")
-        timeSent = struct.unpack("d", recPacket[28:28+bytesAsDouble])[0]
+        timeSent = struct.unpack("d", recPacket[28:28 + bytesAsDouble])[0]
 
-        rtt = (timeReceived - timeSent)*1000
+        rtt = (timeReceived - timeSent) * 1000
         rtt_count += 1
         rtt_sum += rtt
         rtt_min = min(rtt, rtt_min)
         rtt_max = max(rtt, rtt_max)
 
-        ipHeader = struct.unpack('!BBHHHBBH4s4s' , recPacket[:20])
+        ipHeader = struct.unpack('!BBHHHBBH4s4s', recPacket[:20])
         ttl = ipHeader[5]
         sendAddress = socket.inet_ntoa(ipHeader[8])
-        packetLength  = len(recPacket) - 20
+        packetLength = len(recPacket) - 20
 
         # Explain each line
 
@@ -80,8 +81,8 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         if timeLeft <= 0:
             return "Request timed out."
 
-        return 'Received {} bytes from {}: icmp_seq={} ttl={} time={:.3f} ms'.format(packetLength, sendAddress, mySequence, ttl, rtt)
-
+        return 'Received {} bytes from {}: icmp_seq={} ttl={} time={:.3f} ms'.format(packetLength, sendAddress,
+                                                                                     mySequence, ttl, rtt)
 
 
 def sendOnePing(mySocket, destAddr, ID):
@@ -109,6 +110,7 @@ def sendOnePing(mySocket, destAddr, ID):
     # Both LISTS and TUPLES consist of a number of objects
     # which can be referenced by their position number within the object.
 
+
 def doOnePing(destAddr, timeout):
     icmp = getprotobyname("icmp")
     # SOCK_RAW is a powerful socket type. For more details: http://sock- raw.org/papers/sock_raw
@@ -122,19 +124,36 @@ def doOnePing(destAddr, timeout):
 
 
 def ping(host, timeout=1):
+    global rtt_count, rtt_sum, rtt_min, rtt_max
+    rtt_count = 0
+    rtt_sum = 0
+    rtt_min = float('+inf')
+    rtt_max = float('-inf')
+    count = 0
     # timeout=1 means: If one second goes by without a reply from the server,
     # the client assumes that either the client's ping or the server's pong is lost
     dest = gethostbyname(host)
     print("Pinging " + dest + " using Python:")
     print("")
     # Send ping requests to a server separated by approximately one second
-    while 1:
-        delay = doOnePing(dest, timeout)
-        print(delay)
-        time.sleep(1) # one second return delay
+    try:
+        while True:
+            count += 1
+            delay = doOnePing(dest, timeout)
+            print(delay)
+            time.sleep(1)  # one second return delay
+    except KeyboardInterrupt:
+        if count != 0:
+            print("_____ Ping Statistics Gathered for {} _____".format(host))
+            packetLossPercentage = 100.0 - rtt_count * 100.0 / count
+            print('{} packets transmitted, {} packets received, {:.1f}% packet loss'.format(count, rtt_count,
+                                                                                            packetLossPercentage))
+            if rtt_count != 0:
+                print('round-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms'.format(rtt_min, rtt_sum / rtt_count, rtt_max))
+
 
 ping("umass.edu")
-#ping("alibaba.com")
+# ping("alibaba.com")
 # #ping("bbc.com")
 # #ping("unimelb.edu.au")
 # #ping("pretoriazoo.org")
