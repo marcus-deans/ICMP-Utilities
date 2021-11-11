@@ -47,11 +47,11 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         icmpType, icmpCode, myChecksum, packetID, mySequence = struct.unpack('bbHHh', icmpHeader)
 
         if icmpType != 0:
-            if (icmpCode == 0):
+            if icmpCode == 0:
                     return "Destination Network Unreachable"
-            if (icmpCode == 1):
+            if icmpCode == 1:
                     return "Destination Host Unreachable"
-            if (icmpCode == 2):
+            if icmpCode == 2:
                     return "Destination Protocol Unreachable"
             return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType,
                                                                                                              icmpCode)
@@ -69,7 +69,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
         ipHeader = struct.unpack('!BBHHHBBH4s4s', recPacket[:20])
         ttl = ipHeader[5]
-        sendAddress = socket.inet_ntoa(ipHeader[8])
+        sendAddress = inet_ntoa(ipHeader[8])
         packetLength = len(recPacket) - 20
 
         # Explain each line
@@ -147,11 +147,11 @@ def ping(host, timeout=1):
             print('{} packets transmitted, {} packets received, {:.1f}% packet loss'.format(count, rtt_count,
                                                                                             packetLossPercentage))
             if rtt_count != 0:
-                print('round-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms'.format(rtt_min, rtt_sum / rtt_count, rtt_max))
+                print('RTT Min: {:.3f}ms | RTT Avg: {:.3f}ms | RTT Max: {:.3f}ms'.format(rtt_min, rtt_sum / rtt_count, rtt_max))
 
-ping("127.0.0.1")
+# ping("127.0.0.1")
 # ping("umass.edu")
-# ping("alibaba.com")
+ping("alibaba.com")
 # #ping("bbc.com")
 # #ping("unimelb.edu.au")
 # #ping("pretoriazoo.org")
