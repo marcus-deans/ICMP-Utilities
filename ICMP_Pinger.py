@@ -57,7 +57,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
             if icmpCode == 2:  # ICMP Type 0 and Code 3 case is unreachable destination protocol
                 return "Destination Protocol Unreachable"
             return "Other Error: Expected ICMP Type = 0 and Code = 0, but obtained {} and {}".format(icmpType,
-                                                                                                     icmpCode)
+                                                                                                  icmpCode)
             # Any other ICMP Code with Type not 0 fits into 'other errors' category
 
         if packetID != ID:  # if the packet ID is not as expected, display error
@@ -110,8 +110,10 @@ def sendOnePing(mySocket, destAddr, ID):
         myChecksum = htons(myChecksum)
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
     packet = header + data
-
-    mySocket.sendto(packet, (destAddr, 1))  # AF_INET address must be tuple, not str
+    try:
+	mySocket.sendto(packet, (destAddr, 1))  # AF_INET address must be tuple, not str
+    except:
+    	print("Destination Network Unreachable")
     # Both LISTS and TUPLES consist of a number of objects
     # which can be referenced by their position number within the object.
 
